@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 16-Oct-2021 15:09:54
+% Last Modified by GUIDE v2.5 17-Oct-2021 22:30:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,7 +52,10 @@ function GUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to GUI (see VARARGIN)
 
-%dataset 1
+fetched = 0;
+%to check if the data is loaded properly
+handles.fetched = fetched; 
+
 
 % Choose default command line output for GUI
 handles.output = hObject;
@@ -75,9 +78,9 @@ function varargout = GUI_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in Pause_Pushbutton.
-function Pause_Pushbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to Pause_Pushbutton (see GCBO)
+% --- Executes on button press in Plot_Pushbutton.
+function Plot_Pushbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to Plot_Pushbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -90,8 +93,8 @@ function Browse_Pushbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 [filename, pathname] = uigetfile({'*.mat'}, 'File Browser');
 
-global fetched;
-fetched = 0;
+%global fetched;
+
 if (filename)
     
     fullpathname = strcat(pathname, filename);
@@ -102,7 +105,7 @@ if (filename)
     [infofilename, infopathname] = uigetfile('/*.info', 'Select info file');
    
     if (infofilename)
-        fetched = 1;
+        handles.fetched = 1;
         infofullpathname = strcat (infopathname, infofilename);
         infofile = fopen(infofullpathname);
         %skip 3 lines to get to sampling
@@ -121,6 +124,7 @@ if (filename)
         [Row, Signal, Gain, Base, Units] = strread(fgetl(infofile), '%f%s%f%f%s', 'delimiter', '\t');
         %info = [sampfreq, sampint, Gain, Base, Units];
         %tried textscan and had errors
+        fclose(infofile);
 
         handles.data = data;
         handles.interval = interval;
@@ -140,42 +144,125 @@ else
 end
 
 
-
+fprintf('state of toggle button = %f\n',handles.Plot_Togglebutton.Value)
 
 guidata(hObject, handles);
 
 
 
 % --- Executes on button press in Plot_Pushbutton.
-function Plot_Pushbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to Plot_Pushbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-global fetched;
-
-fprintf('fetched = %1.0f \n', fetched);
-
-
-
-if (fetched)
-    y = (handles.signal-handles.Base)/handles.Gain;
-    %((size(handles.data)-1)*handles.sampint)
-    %x = (0:size(handles.data,2)-1)*handles.interval;
-    x = 0 : size(handles.signal,2)-1;
-    
-    n = size(handles.signal,2)-1;
-    disp(n);
-   
-    for i = 1:n
-    
-        plot(1:1000+i, y(1:2*handles.fs+i))
-        ylabel(handles.Units)
-       axis([i 1000+i -1 1])
-    
-       drawnow
-    end
-    
-    spectrogram(handles.signal, 'axes2')
-end
+% function Plot_Pushbutton_Callback(hObject, eventdata, handles)
+% % hObject    handle to Plot_Pushbutton (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% %global fetched;
+% 
+% fprintf('fetched = %1.0f \n', handles.fetched);
+% 
+% 
+% 
+% if (handles.fetched)
+%     y = (handles.signal-handles.Base)/handles.Gain;
+%     %((size(handles.data)-1)*handles.sampint)
+%     %x = (0:size(handles.data,2)-1)*handles.interval;
+%     x = (0 : size(handles.signal,2)-1);
+%     low_limit = min(y)*1.5;
+%     high_limit = max(y)*1.5;
+%     fov = 1.5*handles.fs; %field of view on the x axis
+%     
+%     n = size(handles.signal,2);
+%     disp(n);
+%     %
+%    %axes(handles.axes4);
+%   
+%     for i = 1:n
+% %hard coded for simplicity
+%         
+%         plot(x, y);
+%         axis([i fov+i low_limit high_limit]);
+%         ylabel(handles.Units);
+%         
+%         %addpoints(animatedline, x(i),y(i));
+%         drawnow;
+%     end
+%     
+% %trying to figure out how it works!
+%     %spectrogram(handles.signal,kaiser(256,5),220,512,handles.fs,'yaxis')
+%     %hold on;
+%     %axes(handles.axes5);
+%      %plot(spectrogram(handles.signal))
+%      figure 2
+%      spectrogram(handles.signal)
+% 
+% end
      
     
+
+
+% --- Executes on button press in Plot_Togglebutton.
+function Plot_Togglebutton_Callback(hObject, eventdata, handles)
+% hObject    handle to Plot_Togglebutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of Plot_Togglebutton
+toggle_state = get(hObject, 'Value');
+fprintf('state of toggle button = %f\n',toggle_state)
+
+
+%global fetched; %bad practice
+fprintf('fetched = %1.0f \n', handles.fetched);
+n = size(handles.signal,2);
+disp(n);
+
+%assigning certain axes for the signal
+%in hope of getting the spectrogram in the other axes
+        axes(handles.axes5);
+        spectrogram(handles.signal, 'yaxis')
+        
+        
+axes(handles.axes4);
+if (handles.fetched)
+    i = 1; %increment for  the x axis
+    while(toggle_state)
+        y = (handles.signal-handles.Base)/handles.Gain;
+
+        %x = (0:size(handles.data,2)-1)*handles.interval;
+        x = (0 : size(handles.signal,2)-1)*handles.interval;
+        low_limit = min(y)*1.5;
+        high_limit = max(y)*1.5;
+        fov = 1.5*handles.fs; %from 0 to fov will be the field of view on the x axis
+        
+
+            
+            %hard coded for simplicity %not anymore
+        
+            plot(handles.axes4, x, y); %assigning axes4 is mandatory to prevent plotting in external windows
+            axis([x(i) x(fov+i) low_limit high_limit]);
+            ylabel(handles.Units);
+        
+            %addpoints(animatedline, x(i),y(i));
+            drawnow;
+            
+            i = i + 1;
+        
+    
+        %trying to figure out how it works!
+        %spectrogram(handles.signal,kaiser(256,5),220,512,handles.fs,'yaxis')
+        %hold on;
+        %axes(handles.axes5);
+        %plot(spectrogram(handles.signal))
+      
+        
+        
+    end
+    
+    set(hObject, 'Value', 0);
+    
+else
+    set(hObject, 'Value', 0);
+
+
+end
+
