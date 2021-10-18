@@ -78,12 +78,6 @@ function varargout = GUI_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in Plot_Pushbutton.
-function Plot_Pushbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to Plot_Pushbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 
 
 % --- Executes on button press in Browse_Pushbutton.
@@ -98,10 +92,15 @@ function Browse_Pushbutton_Callback(hObject, eventdata, handles)
 if (filename)
     
     fullpathname = strcat(pathname, filename);
-    data = load(fullpathname);
+    datastruct = load(fullpathname);
     %explain fieldnames.. how the data was before and after
-    fields = fieldnames(data);
-    signal = data.(fields{1});
+    
+    %the data loaded will be in the form of struct arrays
+    %A structure array is a data type that groups related data using data containers called fields. 
+    %Each field can contain any type of data. 
+    %Access data in a field using dot notation of the form structName.fieldName.
+    fields = fieldnames(datastruct);
+    signal = datastruct.(fields{1});
     [infofilename, infopathname] = uigetfile('/*.info', 'Select info file');
    
     if (infofilename)
@@ -126,7 +125,7 @@ if (filename)
         %tried textscan and had errors
         fclose(infofile);
 
-        handles.data = data;
+        handles.datastruct = datastruct;
         handles.interval = interval;
         handles.fs = fs;
         handles.Gain = Gain;
@@ -147,57 +146,7 @@ end
 fprintf('state of toggle button = %f\n',handles.Plot_Togglebutton.Value)
 
 guidata(hObject, handles);
-
-
-
-% --- Executes on button press in Plot_Pushbutton.
-% function Plot_Pushbutton_Callback(hObject, eventdata, handles)
-% % hObject    handle to Plot_Pushbutton (see GCBO)
-% % eventdata  reserved - to be defined in a future version of MATLAB
-% % handles    structure with handles and user data (see GUIDATA)
-% 
-% %global fetched;
-% 
-% fprintf('fetched = %1.0f \n', handles.fetched);
-% 
-% 
-% 
-% if (handles.fetched)
-%     y = (handles.signal-handles.Base)/handles.Gain;
-%     %((size(handles.data)-1)*handles.sampint)
-%     %x = (0:size(handles.data,2)-1)*handles.interval;
-%     x = (0 : size(handles.signal,2)-1);
-%     low_limit = min(y)*1.5;
-%     high_limit = max(y)*1.5;
-%     fov = 1.5*handles.fs; %field of view on the x axis
-%     
-%     n = size(handles.signal,2);
-%     disp(n);
-%     %
-%    %axes(handles.axes4);
-%   
-%     for i = 1:n
-% %hard coded for simplicity
-%         
-%         plot(x, y);
-%         axis([i fov+i low_limit high_limit]);
-%         ylabel(handles.Units);
-%         
-%         %addpoints(animatedline, x(i),y(i));
-%         drawnow;
-%     end
-%     
-% %trying to figure out how it works!
-%     %spectrogram(handles.signal,kaiser(256,5),220,512,handles.fs,'yaxis')
-%     %hold on;
-%     %axes(handles.axes5);
-%      %plot(spectrogram(handles.signal))
-%      figure 2
-%      spectrogram(handles.signal)
-% 
-% end
-     
-    
+  
 
 
 % --- Executes on button press in Plot_Togglebutton.
